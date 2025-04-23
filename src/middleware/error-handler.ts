@@ -1,15 +1,20 @@
 import { StatusCodes } from "http-status-codes";
 import { CustomAPIError } from "../errors";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
-const errorHandlerMiddleware = async (err: Error, req: Request, res: Response): Promise<void> => {
+const errorHandlerMiddleware = async (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   if (err instanceof CustomAPIError) {
-    res.status(err.statusCode).json({ msg: err.message });
+    res.status(err.statusCode).json({ error: err.message });
     return;
   }
   res
     .status(StatusCodes.INTERNAL_SERVER_ERROR)
-    .json({ msg: "Something went wrong, please try again later" });
+    .json({ error: "Something went wrong, please try again later" });
 };
 
 export default errorHandlerMiddleware;

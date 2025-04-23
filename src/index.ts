@@ -17,14 +17,14 @@ app.use(express.json());
 
 app.use("/api/books", bookRouter);
 
+app.get("/", (req, res) => {
+  res.json({ msg: "Hello World" });
+});
+
 app.use(NotFound);
 app.use(errorHandlerMiddleware);
 
 const PORT = process.env.PORT || 3000;
-
-app.get("/", (req, res) => {
-  res.json({ msg: "Hello World" });
-});
 
 const server = app.listen(PORT, () => {
   console.log(`Server running on port: ${PORT}`);
