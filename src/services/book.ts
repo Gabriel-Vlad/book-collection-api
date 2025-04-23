@@ -1,6 +1,6 @@
 import prisma from "../index";
 import { Book } from "../types/book";
-import { NotFound, BadRequest, InternalServerError } from "../errors";
+import { NotFound, BadRequest } from "../errors";
 
 export const getAllBooksPrisma = async (): Promise<Book[]> => {
   const booksFromDb: Book[] = await prisma.book.findMany({
