@@ -1,5 +1,6 @@
 import prisma from "../index";
 import { Book } from "../types/book";
+import { NotFound, BadRequest, InternalServerError } from "../errors";
 
 export const getAllBooksPrisma = async (): Promise<Book[]> => {
   try {
@@ -14,7 +15,7 @@ export const getAllBooksPrisma = async (): Promise<Book[]> => {
     return books;
   } catch (error) {
     console.log(error);
-    throw new Error("Could not fetch the books");
+    throw new InternalServerError("Internal error occurred while fetching the books");
   }
 };
 
@@ -25,7 +26,7 @@ export const getSingleBookPrisma = async (bookId: number): Promise<Book> => {
     });
 
     if (!bookFromDb) {
-      throw new Error(`Boom with the id of ${bookId} does not exist`);
+      throw new NotFound(`Book with the id of: ${bookId} does not exist`);
     }
 
     const book: Book = {
@@ -35,13 +36,18 @@ export const getSingleBookPrisma = async (bookId: number): Promise<Book> => {
     return book;
   } catch (error) {
     console.log(error);
-    throw new Error("Could not fetch book");
+    throw new InternalServerError("Internal error occurred while fetching the book");
   }
 };
 
 export const createBookPrisma = async (props: Book): Promise<Book> => {
   try {
     const { title, author, publishedDate, genre, isRead } = props;
+
+    if (!title || !author || !publishedDate || !genre || !isRead) {
+      throw new BadRequest("Please provide data for all required fields");
+    }
+
     const bookToDb: Book = await prisma.book.create({
       data: {
         title,
@@ -60,41 +66,61 @@ export const createBookPrisma = async (props: Book): Promise<Book> => {
     return book;
   } catch (error) {
     console.log(error);
-    throw new Error("Could not create book");
+    throw new InternalServerError("Internal error occurred while creating the book");
   }
 };
 
 export const deleteBookPrisma = async (bookId: number): Promise<Book> => {
-  const deletedBook: Book = await prisma.book.delete({
-    where: {
-      id: bookId,
-    },
-  });
-  const book: Book = {
-    ...deletedBook,
-    publishedDate: new Date(deletedBook.publishedDate),
-  };
-  return book;
+  try {
+    const deletedBook: Book = await prisma.book.delete({
+      where: {
+        id: bookId,
+      },
+    });
+
+    if (!deletedBook) {
+      throw new NotFound(`Book with the id of: ${bookId} does not exist`);
+    }
+
+    const book: Book = {
+      ...deletedBook,
+      publishedDate: new Date(deletedBook.publishedDate),
+    };
+    return book;
+  } catch (error) {
+    console.log(error);
+    throw new InternalServerError("Internal error occurred while deleting the book");
+  }
 };
 
 export const updateBookPrisma = async (bookId: number, props: Partial<Book>): Promise<Book> => {
-  const { title, author, publishedDate, genre, isRead } = props;
-  const updatedBook = await prisma.book.update({
-    where: {
-      id: bookId,
-    },
-    data: {
-      title,
-      author,
-      publishedDate,
-      genre,
-      isRead,
-    },
-  });
+  try {
+    const { title, author, publishedDate, genre, isRead } = props;
 
-  const book = {
-    ...updatedBook,
-    publishedDate: new Date(updatedBook.publishedDate),
-  };
-  return book;
+    if (!title && !author && !publishedDate && !genre && !isRead) {
+      throw new BadRequest("At least one of the fields must be updated");
+    }
+
+    const updatedBook = await prisma.book.update({
+      where: {
+        id: bookId,
+      },
+      data: {
+        title,
+        author,
+        publishedDate,
+        genre,
+        isRead,
+      },
+    });
+
+    const book = {
+      ...updatedBook,
+      publishedDate: new Date(updatedBook.publishedDate),
+    };
+    return book;
+  } catch (error) {
+    console.log(error);
+    throw new InternalServerError("Internal error occurred while updating the book");
+  }
 };

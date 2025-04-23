@@ -10,14 +10,20 @@ const app = express();
 
 import bookRouter from "./routes/route";
 
+import errorHandlerMiddleware from "./middleware/error-handler";
+import NotFound from "./middleware/not-found";
+
 app.use(express.json());
 
 app.use("/api/books", bookRouter);
 
+app.use(NotFound);
+app.use(errorHandlerMiddleware);
+
 const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
-  res.json();
+  res.json({ msg: "Hello World" });
 });
 
 const server = app.listen(PORT, () => {
